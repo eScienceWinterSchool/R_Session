@@ -151,21 +151,40 @@ mapWorld_Data=merge(mapWorld,mergedData,
                     by.x = 'ISO3', 
                     by.y = 'iso3')
 
-#plot ----
-library(RColorBrewer)
-TheColors <- brewer.pal(4, "Set1")
+#plot (I) ----
+
+plot(mapWorld_Data['pam'], 
+     border='grey50',
+     lwd=0.4,
+     main="Countries by HDI & Democracy", 
+     sub='(missing values in light grey)')
+
+# plot (II) ----
 plot(st_geometry(mapWorld),
      col = 'grey90', 
      main="Countries by HDI & Democracy", 
      sub='(missing values in light grey)',border = NA)
 plot(mapWorld_Data['pam'], 
      border='grey50',
+     lwd=0.4,add=T)
+
+
+# customizing -----
+library(RColorBrewer)
+TheColors <- brewer.pal(4, "Set2")
+plot(st_geometry(mapWorld),
+     col = 'grey90', 
+     main="Countries by HDI & Democracy",
+     border = NA)
+plot(mapWorld_Data['pam'], 
+     border='grey50',
      lwd=0.4,
      col=TheColors[mapWorld_Data$pam],
      add=T) # line width 
-legend("bottomleft", 
-       fill=TheColors,
-       legend = newvalues, 
-     )
+legend("bottom",horiz = T,
+       fill=TheColors,title = "Levels (ascending)",
+       legend = newvalues,xpd=T, 
+       inset=c(0,-0.2)
+)
 
 

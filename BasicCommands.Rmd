@@ -1,6 +1,8 @@
 ---
 title: "Basic R"
-output: html_notebook
+output:
+  html_document:
+    df_print: paged
 ---
 
 # First steps
@@ -11,6 +13,7 @@ rm(list = ls())
 ```
 
 
+# Collecting Data}
 
 ```{r collecting_DataTable}
 # github link to data:
@@ -21,10 +24,13 @@ fileLink=url(link)
 mergedData=readRDS(fileLink)
 ```
 
+knowing column names
+
 ```{r knowing column names}
 names(mergedData)
 ```
 
+data types
 
 ```{r data types}
 str(mergedData)
@@ -33,6 +39,7 @@ str(mergedData)
 
 # categorical exploration 
 
+## frequency table
 
 ```{r frequency table}
 library(summarytools)
@@ -42,6 +49,7 @@ freq(mergedData$Regimetype,
      report.nas=FALSE)
 ```
 
+## compute statistics
 
 ```{r compute statistics}
 DescTools::Mode(mergedData$Regimetype)
@@ -50,7 +58,7 @@ DescTools::Median(mergedData$Regimetype)
 ```
 
 
-
+# Plots
         
 ```{r prepare plot}
 
@@ -70,11 +78,13 @@ bar + labs(title = "Democracy in the world (2021)",
 
 # Numeric exploration 
 
+## summary statistics
+
 ```{r table of summary statistics}
 summary(Filter(is.numeric, mergedData))
 ```
 
-
+The Boxplot
 
 ```{r numBoxplot}
 mM_Positions=grep('mM',names(mergedData))
@@ -89,7 +99,9 @@ box + coord_flip()
         
         
 
-# linear regression 
+# Linear regression 
+
+Hipotheses and regressions
 
 ```{r Hipotheses and regressions}
 h1=formula(HumanDevelopmentIndex~Functioningofgovernment)
@@ -99,13 +111,15 @@ h2=formula(HumanDevelopmentIndex~Functioningofgovernment + Politicalparticipatio
 regre2=glm(h2,data=mergedData,family = "gaussian")
 ```
 
+## Results
 
+### first regression
 ```{r show result of first regression}
 summary(regre1)
 library(rsq)
 rsq(regre1)
 ```
-
+### second regression
 
 ```{r show result of second regression}
 summary(regre2)
@@ -113,16 +127,17 @@ lm.beta::lm.beta(regre2)
 rsq(regre2,adj=T)
 ```
 
+### compare regressions
 
 ```{r compare regressions}
 anova(regre1,regre2)
 ```
 
 
-# logistic regression 
+# Logistic regression 
 
 
-
+## Hipotheses and regressions
 
 ```{r Hipotheses and regressions logit}
 # data selection
@@ -136,24 +151,30 @@ h2=formula(Regimetype~MeanYearsOfSchooling + LifeExpectancyAtBirth)
 regreLogi2=glm(h2,data=mergedData_Dico,family = "binomial")
 ```
 
+## Results
+
+### first regression
 
 ```{r show result of first regression logit}
 summary(regreLogi1)
 
 ```
 
+### second regression
 
 ```{r show result of second regression logit}
 summary(regreLogi2)
 ```
 
-
+### compare regressions
 
 ```{r compare regressions logit}
 anova(regreLogi1,regreLogi2)
 ```
 
-## Clustering countries
+# Clustering 
+
+## subsetting
 
 ```{r subset}
 
@@ -164,7 +185,7 @@ row.names(dataToCluster)=mergedData$Countryname
 ```
 
 
-
+## computing clusters
 
 ```{r clustering with k-medoids}
 set.seed(111)
@@ -175,16 +196,13 @@ dataToCluster$pam=res.pam$cluster
 
 ```
 
+## understanding labels
 
 ```{r understanding cluster labels}
 aggregate(data=dataToCluster,Overallscore_mM~pam,mean)
 ```
 
-
-# -----
-
-
-
+## recoding labels
 
 ```{r recoding labels}
 #library(dplyr)
@@ -197,8 +215,9 @@ mergedData$pam=recoded
 ```
                                        
 
-## map file
+# Mapping
 
+The map data:
 
 ```{r open file}
 # link in Github
@@ -224,6 +243,7 @@ head(mapWorld)
 str(mapWorld)
 ```
 
+## merging variables into map
 
 ```{r merge}
 
@@ -233,19 +253,21 @@ mapWorld_Data=merge(mapWorld,mergedData,
 
 ```
 
+## Plotting
 
 ```{r plot}
-base=ggplot(mapWorld) + 
+baseMap=ggplot(mapWorld) + 
      geom_sf(color=NA,fill='grey90') + 
      theme_light()
 
-mapPlot=base + geom_sf(data = mapWorld_Data,
+mapPlot=baseMap + geom_sf(data = mapWorld_Data,
                        aes(fill=pam),
                        size=0.1,
                        color='grey50') + 
         labs(title = "Countries by HDI & Democracy") 
 
-mapPlot + scale_fill_brewer(palette = "Set1")
+mapPlot + scale_fill_brewer(palette = "Set2",
+                            name='Levels\n(ascending)')
 
 ```
 
