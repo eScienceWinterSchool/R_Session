@@ -1,0 +1,253 @@
+---
+title: "Basic R"
+output: html_notebook
+---
+
+# First steps
+
+```{r someSetup}
+# clean memory
+rm(list = ls())
+```
+
+
+
+```{r collecting_DataTable}
+# github link to data:
+link="https://github.com/eScienceWinterSchool/PythonSession/raw/master/hdidemiso_plus.RDS"
+
+#opening data
+fileLink=url(link)
+mergedData=readRDS(fileLink)
+```
+
+```{r knowing column names}
+names(mergedData)
+```
+
+
+```{r data types}
+str(mergedData)
+```
+
+
+# categorical exploration 
+
+
+```{r frequency table}
+library(summarytools)
+
+freq(mergedData$Regimetype, 
+     plain.ascii = FALSE,
+     report.nas=FALSE)
+```
+
+
+```{r compute statistics}
+DescTools::Mode(mergedData$Regimetype)
+DescTools::Median(mergedData$Regimetype)
+
+```
+
+
+
+        
+```{r prepare plot}
+
+library(ggplot2)
+
+base=ggplot(data = mergedData)
+bar=base + geom_bar(aes(x=Regimetype),
+                    fill='orange',
+                    color='red')
+bar + labs(title = "Democracy in the world (2021)",
+           x= "Regime Type",
+           y= "count of countries",
+           caption = 'Source: The Economist')
+
+```
+
+
+# Numeric exploration 
+
+```{r table of summary statistics}
+summary(Filter(is.numeric, mergedData))
+```
+
+
+
+```{r numBoxplot}
+mM_Positions=grep('mM',names(mergedData))
+DataForBox=reshape2::melt(mergedData[,mM_Positions])
+
+base=ggplot(data=DataForBox)
+box=base + geom_boxplot(aes(x=variable,y=value),
+                        fill='lightblue',
+                        color='red')
+box + coord_flip()
+```
+        
+        
+
+# linear regression 
+
+```{r Hipotheses and regressions}
+h1=formula(HumanDevelopmentIndex~Functioningofgovernment)
+regre1=glm(h1,data=mergedData,family = "gaussian")
+
+h2=formula(HumanDevelopmentIndex~Functioningofgovernment + Politicalparticipation)
+regre2=glm(h2,data=mergedData,family = "gaussian")
+```
+
+
+```{r show result of first regression}
+summary(regre1)
+library(rsq)
+rsq(regre1)
+```
+
+
+```{r show result of second regression}
+summary(regre2)
+lm.beta::lm.beta(regre2)
+rsq(regre2,adj=T)
+```
+
+
+```{r compare regressions}
+anova(regre1,regre2)
+```
+
+
+# logistic regression 
+
+
+
+
+```{r Hipotheses and regressions logit}
+# data selection
+Selection=c('Authoritarian','Flawed democracy')
+mergedData_Dico=mergedData[mergedData$Regimetype%in%Selection,]
+
+h1=formula(Regimetype~MeanYearsOfSchooling)
+regreLogi1=glm(h1,data=mergedData_Dico,family = "binomial")
+
+h2=formula(Regimetype~MeanYearsOfSchooling + LifeExpectancyAtBirth)
+regreLogi2=glm(h2,data=mergedData_Dico,family = "binomial")
+```
+
+
+```{r show result of first regression logit}
+summary(regreLogi1)
+
+```
+
+
+```{r show result of second regression logit}
+summary(regreLogi2)
+```
+
+
+
+```{r compare regressions logit}
+anova(regreLogi1,regreLogi2)
+```
+
+## Clustering countries
+
+```{r subset}
+
+positions_mM=grep("mM", names(mergedData)) #easy way detect positions
+dataToCluster= mergedData[,positions_mM]
+row.names(dataToCluster)=mergedData$Countryname
+
+```
+
+
+
+
+```{r clustering with k-medoids}
+set.seed(111)
+library(cluster)
+distances=cluster::daisy(dataToCluster)
+res.pam=pam(distances,4,cluster.only = F)
+dataToCluster$pam=res.pam$cluster
+
+```
+
+
+```{r understanding cluster labels}
+aggregate(data=dataToCluster,Overallscore_mM~pam,mean)
+```
+
+
+# -----
+
+
+
+
+```{r recoding labels}
+#library(dplyr)
+recoded=dplyr::recode_factor(dataToCluster$pam,
+                             `3`=1,`1`=2,`2`=3,`4`=4,
+                             .ordered = T)
+
+# new column 
+mergedData$pam=recoded
+```
+                                       
+
+## map file
+
+
+```{r open file}
+# link in Github
+linkMap="https://github.com/eScienceWinterSchool/R_Session/raw/main/worldMap.geojson"
+# read in file
+library(sf)
+mapWorld=read_sf(linkMap)
+```
+
+
+```{r columns}
+names(mapWorld)
+```
+
+
+```{r quick look}
+head(mapWorld)
+```
+
+
+```{r structure}
+
+str(mapWorld)
+```
+
+
+```{r merge}
+
+mapWorld_Data=merge(mapWorld,mergedData,
+                    by.x = 'ISO3', 
+                    by.y = 'iso3')
+
+```
+
+
+```{r plot}
+base=ggplot(mapWorld) + 
+     geom_sf(color=NA,fill='grey90') + 
+     theme_light()
+
+mapPlot=base + geom_sf(data = mapWorld_Data,
+                       aes(fill=pam),
+                       size=0.1,
+                       color='grey50') + 
+        labs(title = "Countries by HDI & Democracy") 
+
+mapPlot + scale_fill_brewer(palette = "Set1")
+
+```
+
+
+
