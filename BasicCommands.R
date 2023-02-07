@@ -1,5 +1,5 @@
 
-# First steps
+# First steps 
 
 # someSetup -------------
 # clean memory
@@ -26,15 +26,15 @@ str(mergedData)
 (FTRegime=table(mergedData$Regimetype)) #counts
 
 ## frequency table (II)-----------
-(FTRegimeShare=prop.table(table(mergedData$Regimetype))) #share
+(FTRegimeShare=prop.table(FTRegime)) #share
 
 # compute statistics -------------
-(mode=which.max(FTRegime))
+(mode=which.max(FTRegime)) #mode
 
 (median=FTRegimeShare[cumsum(FTRegimeShare)>0.5][1])
 
 # prepare plot -------------
-barplot(FTRegimeShare,
+barplot(FTRegime,
         main = "Democracy in the world (2021)",
         xlab = "Regime Type",
         ylab = "count of countries",
