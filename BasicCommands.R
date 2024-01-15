@@ -3,6 +3,8 @@
 
 # someSetup -------------
 # clean memory
+
+
 rm(list = ls())
 
 # collecting_DataTable -------------
