@@ -10,7 +10,7 @@ rm(list = ls())
 # collecting_DataTable -------------
 
 # github link to data:
-link="https://github.com/eScienceWinterSchool/PythonSession/raw/master/hdidemiso_plus.RDS"
+link="https://github.com/eScienceWinterSchool/R_Session/raw/main/data/hdidemiso_plus.RDS"
 
 #opening data
 fileLink=url(link)
@@ -120,14 +120,14 @@ res.pam=cluster::pam(distances,4,cluster.only = F)
 dataToCluster$pam=res.pam$cluster
 
 # understanding cluster labels  ----
-aggregate(data=dataToCluster,Overallscore_mM~pam,mean)
+pamMeans=aggregate(data=dataToCluster,Overallscore_mM~pam,mean)
+pamMeans[order(pamMeans$Overallscore_mM),]
 
 # recoding labels-----
-oldvalues = c(3,1,2,4)
-newvalues = ordered(c(1,2,3,4))  # Make this a factor
-recoded=newvalues[ match(dataToCluster$pam, oldvalues) ]
-
-# new column ----
+recoded=dplyr::recode_factor(dataToCluster$pam,
+                             `3`=1,`1`=2,`2`=3,`4`=4,
+                             .ordered = T)
+# new column 
 mergedData$pam=recoded
 
 ## map file
@@ -153,27 +153,17 @@ mapWorld_Data=merge(mapWorld,mergedData,
                     by.x = 'ISO3', 
                     by.y = 'iso3')
 
-#plot (I) ----
+# plot  ----
 
 plot(mapWorld_Data['pam'], 
+     main="Countries by HDI & Democracy\n(missing in grey)",
      border='grey50',
-     lwd=0.4,
-     main="Countries by HDI & Democracy", 
-     sub='(missing values in light grey)')
-
-# plot (II) ----
-plot(st_geometry(mapWorld),
-     col = 'grey90', 
-     main="Countries by HDI & Democracy", 
-     sub='(missing values in light grey)',border = NA)
-plot(mapWorld_Data['pam'], 
-     border='grey50',
-     lwd=0.4,add=T)
+     lwd=0.4)
 
 
-# customizing -----
+# customizing color -----
 library(RColorBrewer)
-TheColors <- brewer.pal(4, "Set2")
+TheColors <- brewer.pal(4, "YlOrRd")
 plot(st_geometry(mapWorld),
      col = 'grey90', 
      main="Countries by HDI & Democracy",
@@ -185,8 +175,7 @@ plot(mapWorld_Data['pam'],
      add=T) # line width 
 legend("bottom",horiz = T,
        fill=TheColors,title = "Levels (ascending)",
-       legend = newvalues,xpd=T, 
-       inset=c(0,-0.2)
-)
+       legend = c(1,2,3,4),xpd=T, 
+       inset=c(0,-0.2))
 
 

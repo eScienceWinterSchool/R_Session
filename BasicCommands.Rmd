@@ -17,7 +17,7 @@ rm(list = ls())
 
 ```{r collecting_DataTable}
 # github link to data:
-link="https://github.com/eScienceWinterSchool/PythonSession/raw/master/hdidemiso_plus.RDS"
+link="https://github.com/eScienceWinterSchool/R_Session/raw/main/data/hdidemiso_plus.RDS"
 
 #opening data
 fileLink=url(link)
@@ -130,7 +130,7 @@ rsq(regre2,adj=T)
 ### compare regressions
 
 ```{r compare regressions}
-anova(regre1,regre2)
+anova(regre1,regre2,test = 'Chisq') 
 ```
 
 
@@ -169,7 +169,7 @@ summary(regreLogi2)
 ### compare regressions
 
 ```{r compare regressions logit}
-anova(regreLogi1,regreLogi2)
+anova(regreLogi1,regreLogi2,test = 'LRT')
 ```
 
 # Clustering 
@@ -199,7 +199,8 @@ dataToCluster$pam=res.pam$cluster
 ## understanding labels
 
 ```{r understanding cluster labels}
-aggregate(data=dataToCluster,Overallscore_mM~pam,mean)
+pamMeans=aggregate(data=dataToCluster,Overallscore_mM~pam,mean)
+pamMeans[order(pamMeans$Overallscore_mM),]
 ```
 
 ## recoding labels
@@ -264,10 +265,12 @@ mapPlot=baseMap + geom_sf(data = mapWorld_Data,
                        aes(fill=pam),
                        size=0.1,
                        color='grey50') + 
-        labs(title = "Countries by HDI & Democracy") 
+        labs(title = "Countries by HDI & Democracy",
+             subtitle = "(missing values in gray)",
+             caption = "Source: The Economist") 
 
-mapPlot + scale_fill_brewer(palette = "Set2",
-                            name='Levels\n(ascending)')
+mapPlot + scale_fill_brewer(palette = "YlOrRd",
+                            name='Levels (ascending)')
 
 ```
 
